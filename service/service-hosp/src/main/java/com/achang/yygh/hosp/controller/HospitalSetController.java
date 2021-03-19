@@ -22,6 +22,7 @@ import java.util.Random;
  */
 @RestController
 @RequestMapping("/admin/hosp/hospitalSet")
+@CrossOrigin
 public class HospitalSetController {
     @Autowired
     private HospitalSetService hospitalSetService;
@@ -62,6 +63,8 @@ public class HospitalSetController {
         if (!StringUtils.isEmpty(hosname)){
             wrapper.like("hosname",hosname);
         }
+        //排序
+        wrapper.orderByDesc("create_time");
 
         //分页查询
         Page<HospitalSet> pageHospitalSet  = hospitalSetService.page(hospitalSetPage, wrapper);
@@ -87,7 +90,7 @@ public class HospitalSetController {
     }
 
     //根据id获取医院设置
-    @GetMapping("getHospitalSetById/{id}")
+    @GetMapping("/getHospitalSetById/{id}")
     public Result getHospitalSetById(@PathVariable Long id){
         HospitalSet hospitalSet = hospitalSetService.getById(id);
         return Result.ok(hospitalSet);

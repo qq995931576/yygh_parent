@@ -13,7 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
  *******
  */
 @SpringBootApplication
-@MapperScan("com.achang.yygh.hosp.mapper")
+
 @ComponentScan("com.achang")//扫描swagger
 public class ServiceHospMain8201 {
     public static void main(String[] args) {

@@ -11,9 +11,21 @@
     <packaging>pom</packaging>
     <modules>
         <module>service-hosp</module>
+        <module>service-cmn</module>
     </modules>
     <artifactId>service</artifactId>
     <dependencies>
+        <dependency>
+            <groupId>com.achang</groupId>
+            <artifactId>model</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.achang</groupId>
+            <artifactId>service-util</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.achang</groupId>-->
 <!--            <artifactId>service-util</artifactId>-->

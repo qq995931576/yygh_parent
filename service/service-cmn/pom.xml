@@ -9,27 +9,14 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-
-    <artifactId>service-hosp</artifactId>
-    <name>service-hosp</name>
-    <description>service-hosp</description>
+    <artifactId>service-cmn</artifactId>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.achang</groupId>-->
-<!--            <artifactId>model</artifactId>-->
-<!--            <version>0.0.1-SNAPSHOT</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.achang</groupId>-->
-<!--            <artifactId>service-util</artifactId>-->
-<!--            <version>0.0.1-SNAPSHOT</version>-->
-<!--        </dependency>-->
+
     </dependencies>
 
     <build>
-        <finalName>service-hosp</finalName>
+        <finalName>service-cmn</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -37,6 +24,7 @@
             </plugin>
         </plugins>
     </build>
+
 
 
 </project>
