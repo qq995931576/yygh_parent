@@ -1,4 +1,4 @@
-package com.atguigu.yygh.model.hosp;
+package com.achang.yygh.model.hosp;
 
 import com.achang.yygh.model.hosp.BookingRule;
 import com.alibaba.fastjson.JSONObject;
