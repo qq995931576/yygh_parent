@@ -14,4 +14,7 @@ import java.util.Map;
 public interface HospitalService {
     //上传医院接口
     void saveHospital(Map<String, Object> map);
+
+    //查询医院
+    Hospital getByHoscode(String hoscode);
 }

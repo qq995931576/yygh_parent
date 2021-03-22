@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Data
 @ApiModel(description = "Department")
-@Document("Department")
+@Document("Department")//对应mongodb的集合，也就是mysql的表
 public class Department extends BaseMongoEntity {
 	
 	private static final long serialVersionUID = 1L;
