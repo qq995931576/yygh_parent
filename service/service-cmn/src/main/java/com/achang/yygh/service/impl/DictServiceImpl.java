@@ -1,5 +1,7 @@
 package com.achang.yygh.service.impl;
 
+import com.achang.exception.YyghException;
+import com.achang.result.ResultCodeEnum;
 import com.achang.yygh.listener.DictListener;
 import com.achang.yygh.mapper.DictMapper;
 import com.achang.yygh.model.cmn.Dict;
@@ -12,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -89,6 +92,47 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //根据【dictCode可选】、value获取dictName
+    @Override
+    public String getDictName(String dictCode, String value) {
+
+        //判断是否有传dictCode
+        if (StringUtils.isEmpty(dictCode)){
+            //没传dictCode
+            QueryWrapper<Dict> wrapper = new QueryWrapper<>();
+            wrapper.eq("value",value);
+            Dict dict = baseMapper.selectOne(wrapper);
+            return dict.getName();
+        }else {
+            //有传dictCode
+            Dict dict = this.getDictByDictcode(dictCode);
+            Long parentId = dict.getId();
+            Dict finalDict = baseMapper.selectOne(new QueryWrapper<Dict>().
+                    eq("parent_id", parentId).
+                    eq("value", value));
+            return finalDict.getName();
+        }
+
+
+    }
+
+    //根据dictCode获取下级节点
+    @Override
+    public List<Dict> findByDictCode(String dictCode) {
+        //根据dictCode获取对应的id
+        Dict dict = this.getDictByDictcode(dictCode);
+        Long id = dict.getId();
+        //根据id获取下层节点
+        return this.findByParentId(id);
+    }
+
+    //根据dict_code获取对象
+    private Dict getDictByDictcode(String dictCode){
+        QueryWrapper<Dict> wrapper = new QueryWrapper<>();
+        wrapper.eq("dict_code",dictCode);
+        return baseMapper.selectOne(wrapper);
     }
 
 

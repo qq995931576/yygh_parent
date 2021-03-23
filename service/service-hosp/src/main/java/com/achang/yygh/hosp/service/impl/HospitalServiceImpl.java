@@ -1,15 +1,24 @@
 package com.achang.yygh.hosp.service.impl;
 
+import com.achang.cmnClient.DictFeignClient;
 import com.achang.yygh.hosp.repository.HospitalRepository;
 import com.achang.yygh.hosp.service.HospitalService;
 import com.achang.yygh.hosp.service.HospitalSetService;
 import com.achang.yygh.model.hosp.Hospital;
+import com.achang.yygh.vo.hosp.HospitalQueryVo;
 import com.alibaba.fastjson.JSONObject;
+import org.springframework.data.domain.Page;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /******
@@ -22,6 +31,9 @@ public class HospitalServiceImpl implements HospitalService {
 
     @Autowired
     private HospitalRepository hospitalRepository;
+
+    @Autowired
+    private DictFeignClient dictFeignClient;
 
     //上传医院接口
     @Override
@@ -63,5 +75,50 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public Hospital getByHoscode(String hoscode) {
         return hospitalRepository.getHospitalByHoscode(hoscode);
+    }
+
+    //多条件分页查询
+    @Override
+    public Page<Hospital> getPage(Integer page, Integer limit, HospitalQueryVo hospitalQueryVo) {
+        //构建排序规则
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
+        //构建分页规则
+        PageRequest pageRequest = PageRequest.of(page-1, limit, sort);
+        //构建匹配规则
+        ExampleMatcher matching = ExampleMatcher.matching();
+        //改变默认字符串匹配方式：模糊查询
+        ExampleMatcher stringMatcher = matching.withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+        //改变默认大小写忽略方式：忽略大小写
+        stringMatcher.withIgnoreCase(true);
+
+        Hospital hospital = new Hospital();
+        BeanUtils.copyProperties(hospitalQueryVo,hospital);
+
+
+        //构建规则
+        Example<Hospital> example = Example.of(hospital, stringMatcher);
+
+        Page<Hospital> all = hospitalRepository.findAll(example, pageRequest);
+
+        all.getContent().stream().forEach(item->{
+            this.setHospitalHostType(item);
+        });
+        return all;
+    }
+    private Hospital setHospitalHostType(Hospital hospital){
+        //根据dictCode和value获取医院等级名称
+        String hospitalRankName = dictFeignClient.getName("Hostype", hospital.getHostype());
+        //查询省、市、地区
+        String provinceName = dictFeignClient.getName(hospital.getProvinceCode());
+        String districtName = dictFeignClient.getName(hospital.getDistrictCode());
+        String cityName = dictFeignClient.getName(hospital.getCityCode());
+
+        hospital.getParam().put("provinceName",provinceName);
+        hospital.getParam().put("districtName",districtName);
+        hospital.getParam().put("cityName",cityName);
+        hospital.getParam().put("hospitalRankName",hospitalRankName);
+        hospital.getParam().put("fullAddress",provinceName+districtName+cityName);
+
+        return hospital;
     }
 }
