@@ -22,4 +22,8 @@ public interface HospitalService {
 
     //多条件分页查询
     Page<Hospital> getPage(Integer page, Integer limit, HospitalQueryVo hospitalQueryVo);
+
+    //更新医院的上线状态
+    void updateHospStatus(String id, int status);
+
 }

@@ -4,6 +4,7 @@ import com.achang.result.Result;
 import com.achang.yygh.hosp.service.HospitalService;
 import com.achang.yygh.model.hosp.Hospital;
 import com.achang.yygh.vo.hosp.HospitalQueryVo;
+import com.sun.corba.se.spi.presentation.rmi.IDLNameTranslator;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,13 @@ public class HospitalController {
                             HospitalQueryVo hospitalQueryVo){
         Page<Hospital> pageList = hospitalService.getPage(page,limit,hospitalQueryVo);
         return Result.ok(pageList);
+    }
+
+    //更新医院的上线状态
+    @GetMapping("/updateHospStatus/{id}/{status}")
+    public Result updateHospStatus(@PathVariable String id, @PathVariable int status){
+        hospitalService.updateHospStatus(id,status);
+        return Result.ok();
     }
 
 
