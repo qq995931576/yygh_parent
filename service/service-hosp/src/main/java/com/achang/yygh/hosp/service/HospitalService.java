@@ -26,4 +26,6 @@ public interface HospitalService {
     //更新医院的上线状态
     void updateHospStatus(String id, int status);
 
+    //根据id获取医院数据
+    Map<String,Object> getById(String id);
 }

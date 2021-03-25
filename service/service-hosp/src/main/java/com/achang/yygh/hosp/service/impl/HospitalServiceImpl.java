@@ -4,6 +4,7 @@ import com.achang.cmnClient.DictFeignClient;
 import com.achang.yygh.hosp.repository.HospitalRepository;
 import com.achang.yygh.hosp.service.HospitalService;
 import com.achang.yygh.hosp.service.HospitalSetService;
+import com.achang.yygh.model.hosp.BookingRule;
 import com.achang.yygh.model.hosp.Hospital;
 import com.achang.yygh.vo.hosp.HospitalQueryVo;
 import com.alibaba.fastjson.JSONObject;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,6 +117,19 @@ public class HospitalServiceImpl implements HospitalService {
         hospital.setUpdateTime(new Date());
         //设置状态值
         hospitalRepository.save(hospital);
+    }
+
+    //根据id获取医院数据
+    @Override
+    public HashMap<String, Object> getById(String id) {
+        HashMap<String, Object> map = new HashMap<>();
+        Hospital hospital = hospitalRepository.findById(id).get();
+        BookingRule bookingRule = hospital.getBookingRule();
+        hospital.setBookingRule(null);
+        map.put("hospital",hospital);
+        map.put("bookingRule",bookingRule);
+
+        return map;
     }
 
     private Hospital setHospitalHostType(Hospital hospital){
