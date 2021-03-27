@@ -21,4 +21,8 @@ public interface ScheduleService {
     //删除科室
     void delete(String hoscode, String hosScheduleId);
 
+    //根据【医院编号】 【科室编号】，【分页查询】排版规则数据
+    Map<String, Object> getScheduleRulePage(long page, long limit, String hoscode, String depcode);
+
+
 }

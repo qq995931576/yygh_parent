@@ -1,18 +1,31 @@
 package com.achang.yygh.hosp.service.impl;
 
 import com.achang.exception.YyghException;
+import com.achang.utils.DateUtil;
 import com.achang.yygh.hosp.repository.ScheduleRepository;
+import com.achang.yygh.hosp.service.HospitalService;
+import com.achang.yygh.hosp.service.HospitalSetService;
 import com.achang.yygh.hosp.service.ScheduleService;
 import com.achang.yygh.model.hosp.Department;
 import com.achang.yygh.model.hosp.Schedule;
+import com.achang.yygh.vo.hosp.BookingScheduleRuleVo;
 import com.achang.yygh.vo.hosp.ScheduleQueryVo;
 import com.alibaba.fastjson.JSONObject;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +39,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private HospitalService hospitalService;
 
     //上传科室
     @Override
@@ -82,5 +101,106 @@ public class ScheduleServiceImpl implements ScheduleService {
             scheduleRepository.delete(schedule);
         }
     }
+
+    //根据【医院编号】 【科室编号】，【分页查询】排版规则数据
+    @Override
+    public Map<String, Object> getScheduleRulePage(long page, long limit, String hoscode, String depcode) {
+        //根据医院编号、科室编号 查询对应数据
+        //封装查询条件
+        Criteria criteria = Criteria.where("hoscode").is(hoscode)
+                .and("depcode").is(depcode);
+        //根据工作日workDate期进行分组
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(criteria),//条件匹配
+
+                Aggregation.group("workDate")//分组字段
+                .first("workDate").as("workDate")//设置分组后的别名
+                .count().as("docCount")//统计号源数量并设置名字
+                .sum("reservedNumber").as("reservedNumber")//求和reservedNumber字段
+                .sum("availableNumber").as("availableNumber"),//求和availableNumber字段
+
+                Aggregation.sort(Sort.Direction.DESC,"workDate"),//指定是升序还是降序，指定哪个字段排序
+
+                //分页
+                Aggregation.skip((page-1)*limit),//(当前页-1)*每页记录数
+                Aggregation.limit(limit)//每页显示数
+        );
+        //调用方法最终执行
+        //参数1：上面封装的条件
+        //参数2：之前的实体类
+        //参数3：最后封装的尸体类
+        AggregationResults<BookingScheduleRuleVo> results = mongoTemplate.aggregate(agg, Schedule.class, BookingScheduleRuleVo.class);
+        //获取到最终的集合
+        List<BookingScheduleRuleVo> ruleVoList = results.getMappedResults();
+
+        //把日期对应的星期获取出来
+        for (BookingScheduleRuleVo bookingScheduleRuleVo:ruleVoList){
+            Date workDate = bookingScheduleRuleVo.getWorkDate();
+            //获取到星期几
+            String week = DateUtil.getDayOfWeek(new DateTime(workDate));
+            bookingScheduleRuleVo.setDayOfWeek(week);
+        }
+
+        //得到分组查询后的总记录数
+        Aggregation totalAgg = Aggregation.newAggregation(
+                Aggregation.match(criteria),//条件查询
+                Aggregation.group("workDate")//分组)
+        );
+        AggregationResults<BookingScheduleRuleVo> totalAggResults = mongoTemplate.aggregate(totalAgg, Schedule.class, BookingScheduleRuleVo.class);
+        //获取总记录数
+        int total = totalAggResults.getMappedResults().size();
+
+        //设置最终数据进行返回
+        HashMap<String, Object> resultMap = new HashMap<>();
+        resultMap.put("list",ruleVoList);
+        resultMap.put("total",total);
+
+        //根据医院编号，获取医院名称
+        String hospName = hospitalService.getHospName(hoscode);
+
+        //其他基础数据
+        HashMap<String, String> baseMap = new HashMap<>();
+        baseMap.put("hospName",hospName);
+
+        resultMap.put("baseMap",baseMap);
+
+        return resultMap;
+
+    }
+
+    /**
+     * 根据日期获取周几数据
+     * @param dateTime
+     * @return
+     */
+    private String getDayOfWeek(DateTime dateTime) {
+        String dayOfWeek = "";
+        switch (dateTime.getDayOfWeek()) {
+            case DateTimeConstants.SUNDAY:
+                dayOfWeek = "周日";
+                break;
+            case DateTimeConstants.MONDAY:
+                dayOfWeek = "周一";
+                break;
+            case DateTimeConstants.TUESDAY:
+                dayOfWeek = "周二";
+                break;
+            case DateTimeConstants.WEDNESDAY:
+                dayOfWeek = "周三";
+                break;
+            case DateTimeConstants.THURSDAY:
+                dayOfWeek = "周四";
+                break;
+            case DateTimeConstants.FRIDAY:
+                dayOfWeek = "周五";
+                break;
+            case DateTimeConstants.SATURDAY:
+                dayOfWeek = "周六";
+            default:
+                break;
+        }
+        return dayOfWeek;
+    }
+
 
 }

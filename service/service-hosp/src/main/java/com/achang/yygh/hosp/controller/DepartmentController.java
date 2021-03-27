@@ -22,10 +22,12 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
     //根据医院编号，查询医院所有科室列表
-    @GetMapping("/getDeptList/{hoscode}")
+        @GetMapping("/getDeptList/{hoscode}")
     public Result getDeptList(@PathVariable String hoscode){
         List<DepartmentVo> list = departmentService.findDeptTree(hoscode);
         return Result.ok(list);
     }
+
+
 
 }
