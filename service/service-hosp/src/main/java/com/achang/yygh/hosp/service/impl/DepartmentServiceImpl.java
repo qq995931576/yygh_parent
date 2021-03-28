@@ -7,6 +7,7 @@ import com.achang.yygh.model.hosp.Department;
 import com.achang.yygh.vo.hosp.DepartmentQueryVo;
 import com.achang.yygh.vo.hosp.DepartmentVo;
 import com.alibaba.fastjson.JSONObject;
+import com.sun.corba.se.spi.ior.IdentifiableFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -128,8 +129,8 @@ public class DepartmentServiceImpl implements DepartmentService {
             for (Department department1 : bigCodeList) {
                 //遍历大科室数据中的所有小科室
                 DepartmentVo departmentVo1 = new DepartmentVo();
-                department1.setHoscode(department1.getHoscode());
-                department1.setDepname(departmentVo.getDepname());
+                departmentVo1.setDepcode(department1.getDepcode());
+                departmentVo1.setDepname(department1.getDepname());
                 //封装小科室
                 child.add(departmentVo1);
             }
@@ -141,6 +142,16 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
 
         return resultList;
+    }
+
+    //根据医院编号、科室编号，获取科室名称
+    @Override
+    public String getDeptName(String hoscode, String depcode) {
+        Department department = departmentRepository.getDepartmentByHoscodeAndDepcode(hoscode,depcode);
+        if (department!=null){
+            return department.getDepname();
+        }
+        return null;
     }
 
 }

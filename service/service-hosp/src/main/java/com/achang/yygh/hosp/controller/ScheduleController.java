@@ -16,7 +16,7 @@ import java.util.Map;
  *******
  */
 @RestController
-@CrossOrigin
+//@CrossOrigin
 @RequestMapping("/admin/hosp/Schedule")
 public class ScheduleController {
 
@@ -34,6 +34,16 @@ public class ScheduleController {
 
         return Result.ok(map);
 
+    }
+
+
+    //根据医院编号、科室编号、工作日期，查询排版详细信息
+    @GetMapping("/getScheduleDetail/{hoscode}/{depcode}/{workDate}")
+    public Result getScheduleDetail(@PathVariable String hoscode,
+                                    @PathVariable String depcode,
+                                    @PathVariable String workDate){
+        List<Schedule> list = scheduleService.getScheduleDetail(hoscode,depcode,workDate);
+        return Result.ok(list);
     }
 
 

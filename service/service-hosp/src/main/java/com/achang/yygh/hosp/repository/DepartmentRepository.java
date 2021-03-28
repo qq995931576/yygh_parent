@@ -13,4 +13,5 @@ import org.springframework.stereotype.Repository;
 public interface DepartmentRepository extends MongoRepository<Department,String> {
     //根据hoscode,depcode，查询数据库对应数据
     Department getDepartmentByHoscodeAndDepcode(String hoscode, String depcode);
+
 }

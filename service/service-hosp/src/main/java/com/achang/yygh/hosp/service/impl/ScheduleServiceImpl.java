@@ -1,8 +1,10 @@
 package com.achang.yygh.hosp.service.impl;
 
 import com.achang.exception.YyghException;
+import com.achang.result.Result;
 import com.achang.utils.DateUtil;
 import com.achang.yygh.hosp.repository.ScheduleRepository;
+import com.achang.yygh.hosp.service.DepartmentService;
 import com.achang.yygh.hosp.service.HospitalService;
 import com.achang.yygh.hosp.service.HospitalSetService;
 import com.achang.yygh.hosp.service.ScheduleService;
@@ -22,6 +24,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 import java.util.Date;
@@ -45,6 +49,9 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Autowired
     private HospitalService hospitalService;
+
+    @Autowired
+    private DepartmentService departmentService;
 
     //上传科室
     @Override
@@ -125,6 +132,16 @@ public class ScheduleServiceImpl implements ScheduleService {
                 Aggregation.skip((page-1)*limit),//(当前页-1)*每页记录数
                 Aggregation.limit(limit)//每页显示数
         );
+
+        //得到分组查询后的总记录数
+        Aggregation totalAgg = Aggregation.newAggregation(
+                Aggregation.match(criteria),//条件查询
+                Aggregation.group("workDate")//分组)
+        );
+        AggregationResults<BookingScheduleRuleVo> totalAggResults = mongoTemplate.aggregate(totalAgg, Schedule.class, BookingScheduleRuleVo.class);
+        //获取总记录数
+        int total = totalAggResults.getMappedResults().size();
+
         //调用方法最终执行
         //参数1：上面封装的条件
         //参数2：之前的实体类
@@ -141,14 +158,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             bookingScheduleRuleVo.setDayOfWeek(week);
         }
 
-        //得到分组查询后的总记录数
-        Aggregation totalAgg = Aggregation.newAggregation(
-                Aggregation.match(criteria),//条件查询
-                Aggregation.group("workDate")//分组)
-        );
-        AggregationResults<BookingScheduleRuleVo> totalAggResults = mongoTemplate.aggregate(totalAgg, Schedule.class, BookingScheduleRuleVo.class);
-        //获取总记录数
-        int total = totalAggResults.getMappedResults().size();
+
 
         //设置最终数据进行返回
         HashMap<String, Object> resultMap = new HashMap<>();
@@ -165,6 +175,37 @@ public class ScheduleServiceImpl implements ScheduleService {
         resultMap.put("baseMap",baseMap);
 
         return resultMap;
+
+    }
+
+    //根据医院编号、科室编号、工作日期，查询排版详细信息
+    @Override
+    public List<Schedule> getScheduleDetail(String hoscode, String depcode, String workDate) {
+        //根据参数，查询mongodb
+        List<Schedule> scheduleList = scheduleRepository.findScheduleByHoscodeAndDepcodeAndWorkDate(hoscode,depcode,new DateTime(workDate).toDate());
+
+        //遍历list集合，设置每个元素对应的属性
+        //使用stream流遍历
+        scheduleList.stream().forEach(item->{
+            this.packageSchedule(item);
+        });
+
+        return scheduleList;
+    }
+
+    //封装其他值：医院名称，科室名称，日期对应的星期
+    private void packageSchedule(Schedule item) {
+        Map<String, Object> map = item.getParam();
+        //获取医院名称
+        String hospName = hospitalService.getHospName(item.getHoscode());
+        //根据医院编号、科室编号，获取科室名称
+        String deptName = departmentService.getDeptName(item.getHoscode(),item.getDepcode());
+        //获取日期对应的星期
+        String week = DateUtil.getDayOfWeek(new DateTime(item.getWorkDate()));
+
+        map.put("hospName",hospName);
+        map.put("deptName",deptName);
+        map.put("week",week);
 
     }
 
